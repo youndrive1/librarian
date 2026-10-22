@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>한국학 주제전문사서 노윤진 | 포트폴리오</title>
+  
+  <!-- 서재 감성을 위한 한글 명조 & 고딕 폰트 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700;900&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* --------------------------------------------------
+       한국학 서재 테마 디자인 시스템 (한지와 먹, 고서의 품격)
+    -------------------------------------------------- */
+    :root {
+      --bg-hanji: #f7f4ed;         /* 은은하고 따뜻한 한지 미색 */
+      --card-bg: #fffdfa;         /* 정갈한 종이색 카드 */
+      --card-border: #e6dfd1;     /* 서책 표지선 */
+      --ink-dark: #202328;        /* 깊은 먹색 (주 텍스트) */
+      --ink-medium: #474d57;      /* 농묵 텍스트 */
+      --ink-light: #7b838f;       /* 담묵 텍스트 */
+      
+      --accent-seal: #b84332;     /* 전통 인주/낙관 주홍색 */
+      --accent-seal-bg: #faecea;  /* 은은한 인주 틴트 */
+      --accent-ochre: #aa7a44;    /* 고서 금박 / 황토색 */
+      --accent-ochre-light: #f5ede1;
+      --accent-pine: #3d5648;     /* 솔잎 / 청록 학술 포인트 */
+      --accent-pine-light: #eaf1ed;
+
+      --shadow-paper: 0 4px 18px rgba(70, 55, 40, 0.05), 0 1px 3px rgba(70, 55, 40, 0.04);
+      --shadow-hover: 0 14px 30px rgba(70, 55, 40, 0.1), 0 3px 8px rgba(70, 55, 40, 0.06);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 전신(화면 전체) 수묵화 먹물 붓질 캔버스 */
+    #body-ink-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none; /* 클릭/터치 이벤트가 본문 요소로 통과됨 */
+      z-index: 999;        /* 모든 배경 및 카드 위에서 부드럽게 붓질 표현 */
+      mix-blend-mode: multiply; /* 화선지에 먹물이 스며드는 자연스러운 발색 */
+    }
+
+    /* 상단 읽기 진행률 표시선 (묵선 인디케이터) */
+    #reading-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-seal), var(--accent-ochre));
+      width: 0%;
+      z-index: 1000;
+      transition: width 0.1s ease-out;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-hanji);
+      color: var(--ink-dark);
+      line-height: 1.75;
+      word-break: keep-all;
+      position: relative;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(170, 122, 68, 0.035) 0%, transparent 24%),
+        radial-gradient(circle at 90% 80%, rgba(61, 86, 72, 0.035) 0%, transparent 24%);
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 40px 20px 90px;
+      position: relative;
+    }
+
+    /* --------------------------------------------------
+       상단 헤더 & 서예 한자 워터마크 영역
+    -------------------------------------------------- */
+    .header {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 50px 32px 42px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-paper);
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* 서예(書藝) 대형 한자 「韓國學」 배경 워터마크 */
+    .calligraphy-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .calligraphy-chars {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .c-char {
+      font-family: 'Noto Serif KR', 'Batang', Georgia, serif;
+      font-size: clamp(84px, 17vw, 150px);
+      font-weight: 900;
+      color: #1a1e24;
+      line-height: 1;
+      display: inline-block;
+      opacity: 0;
+      filter: blur(8px);
+      will-change: clip-path, opacity, filter, transform;
+    }
+
+    /* 1번째 한자: 韓 (붓이 먹물을 머금고 그어지는 필순 애니메이션) */
+    .char-han {
+      animation: writeStroke 2.2s cubic-bezier(0.19, 1, 0.22, 1) 0.3s forwards;
+    }
+
+    /* 2번째 한자: 國 */
+    .char-guk {
+      animation: writeStroke 2.2s cubic-bezier(0.19, 1, 0.22, 1) 1.2s forwards;
+    }
+
+    /* 3번째 한자: 學 */
+    .char-hak {
+      animation: writeStroke 2.2s cubic-bezier(0.19, 1, 0.22, 1) 2.1s forwards;
+    }
+
+    @keyframes writeStroke {
+      0% {
+        opacity: 0;
+        filter: blur(14px);
+        clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+        transform: scale(0.92) translateY(12px);
+      }
+      35% {
+        opacity: 0.22;
+        filter: blur(6px);
+      }
+      70% {
+        opacity: 0.15;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+      }
+      100% {
+        opacity: 0.085;
+        filter: blur(0px);
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    /* 헤더 콘텐츠 전면 배치 */
+    .header-content {
+      position: relative;
+      z-index: 5;
+    }
+
+    /* 서재 책갈피 리본 */
+    .bookmark-ribbon {
+      position: absolute;
+      top: 0;
+      right: 36px;
+      width: 24px;
+      height: 44px;
+      background: var(--accent-seal);
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+      box-shadow: 0 4px 10px rgba(184, 67, 50, 0.3);
+      cursor: pointer;
+      transition: transform 0.25s ease, height 0.25s ease;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 4px;
+      z-index: 10;
+    }
+
+    .bookmark-ribbon:hover {
+      transform: translateY(6px);
+      height: 52px;
+    }
+
+    .bookmark-ribbon::after {
+      content: '冊';
+      font-family: 'Noto Serif KR', serif;
+      font-size: 11px;
+      color: #fff;
+      font-weight: 700;
+      opacity: 0.9;
+    }
+
+    /* 손그림 프로필 이미지 액자 프레임 (중앙 배치) */
+    .profile-frame-wrap {
+      position: relative;
+      display: inline-block;
+      margin: 6px 0 20px;
+    }
+
+    .profile-img-frame {
+      width: 148px;
+      height: 148px;
+      border-radius: 50%;
+      padding: 6px;
+      background: linear-gradient(145deg, #f4eee3, #ded3bd);
+      box-shadow: 
+        0 10px 24px rgba(70, 55, 40, 0.12),
+        inset 0 1px 3px rgba(255, 255, 255, 0.85);
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+    }
+
+    .profile-img-frame:hover {
+      transform: scale(1.045);
+      box-shadow: 
+        0 16px 36px rgba(70, 55, 40, 0.18),
+        inset 0 1px 3px rgba(255, 255, 255, 0.95);
+    }
+
+    .profile-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+      border: 1px solid rgba(170, 122, 68, 0.25);
+    }
+
+    .header-badge {
+      display: inline-block;
+      font-family: 'Noto Serif KR', serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--accent-pine);
+      background: var(--accent-pine-light);
+      border: 1px solid rgba(61, 86, 72, 0.2);
+      padding: 3px 14px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
+    .header-title {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--ink-dark);
+      margin-bottom: 22px;
+      letter-spacing: -0.8px;
+      line-height: 1.35;
+    }
+
+    .header-subtitle {
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--ink-medium);
+      margin-bottom: 26px;
+    }
+
+    .header-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* 서재풍 인터랙티브 버튼 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid transparent;
+      user-select: none;
+    }
+
+    .btn-seal {
+      background: var(--accent-seal);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(184, 67, 50, 0.22);
+    }
+
+    .btn-seal:hover {
+      background: #a33829;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(184, 67, 50, 0.32);
+    }
+
+    .btn-ochre {
+      background: #ffffff;
+      color: var(--ink-dark);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 2px 8px rgba(70, 55, 40, 0.05);
+    }
+
+    .btn-ochre:hover {
+      border-color: var(--accent-ochre);
+      color: var(--accent-ochre);
+      background: var(--accent-ochre-light);
+      transform: translateY(-2px);
+    }
+
+    /* --------------------------------------------------
+       본문 카드 (고서/한지 서책 스타일)
+    -------------------------------------------------- */
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 34px 30px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-paper);
+      position: relative;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      border-left: 4px solid var(--accent-ochre);
+    }
+
+    .section-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #eee8dc;
+    }
+
+    .section-seal-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--accent-seal-bg);
+      border: 1px solid rgba(184, 67, 50, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-seal);
+      font-family: 'Noto Serif KR', serif;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .section-title {
+      font-family: 'Noto Serif KR', Georgia, serif;
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--ink-dark);
+      letter-spacing: -0.5px;
+    }
+
+    /* --------------------------------------------------
+       경력 사항 (Timeline Card)
+    -------------------------------------------------- */
+    .experience-box {
+      background: #faf7f0;
+      border: 1px solid #ece4d6;
+      border-radius: var(--radius-sm);
+      padding: 22px 20px;
+      transition: background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .experience-box:hover {
+      background: #f7f2e8;
+      border-color: #dfd4c0;
+    }
+
+    .exp-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .exp-org {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--ink-dark);
+    }
+
+    .exp-role-badge {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-pine);
+      background: var(--accent-pine-light);
+      border: 1px solid rgba(61, 86, 72, 0.2);
+      padding: 2px 10px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+
+    .exp-period {
+      font-size: 13px;
+      color: var(--ink-light);
+      font-weight: 500;
+      letter-spacing: 0.2px;
+    }
+
+    .exp-tasks {
+      list-style: none;
+      padding-top: 4px;
+    }
+
+    .exp-tasks li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 8px;
+      font-size: 15px;
+      color: var(--ink-medium);
+      line-height: 1.6;
+    }
+
+    .exp-tasks li::before {
+      content: '▪';
+      position: absolute;
+      left: 4px;
+      color: var(--accent-ochre);
+      font-size: 12px;
+    }
+
+    /* --------------------------------------------------
+       학력 및 자격 (Grid)
+    -------------------------------------------------- */
+    .grid-two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .info-box {
+      background: #faf7f0;
+      border: 1px solid #ece4d6;
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      transition: all 0.25s ease;
+    }
+
+    .info-box:hover {
+      background: #ffffff;
+      border-color: var(--accent-ochre);
+      transform: translateY(-2px);
+    }
+
+    .info-box-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-light);
+      margin-bottom: 6px;
+      font-family: 'Noto Serif KR', serif;
+    }
+
+    .info-box-value {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink-dark);
+      margin-bottom: 4px;
+      font-family: 'Noto Serif KR', serif;
+    }
+
+    .info-box-desc {
+      font-size: 13px;
+      color: var(--ink-medium);
+    }
+
+    /* --------------------------------------------------
+       전문 역량 및 시스템
+    -------------------------------------------------- */
+    .skills-group {
+      margin-bottom: 22px;
+    }
+
+    .skills-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .skills-group-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-light);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Noto Serif KR', serif;
+    }
+
+    .skills-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 15px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      background: #faf7f0;
+      border: 1px solid #e5dcce;
+      color: var(--ink-dark);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .tag:hover {
+      background: var(--accent-ochre-light);
+      border-color: var(--accent-ochre);
+      color: #7b4f1e;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(170, 122, 68, 0.15);
+    }
+
+    .tag-highlight {
+      background: var(--accent-pine-light);
+      border-color: rgba(61, 86, 72, 0.25);
+      color: var(--accent-pine);
+      font-weight: 600;
+    }
+
+    .tag-highlight:hover {
+      background: #d8e5dd;
+      border-color: var(--accent-pine);
+      color: #27392f;
+    }
+
+    /* --------------------------------------------------
+       하단 서재 연락처 푸터
+    -------------------------------------------------- */
+    .footer-contact {
+      background: linear-gradient(135deg, #fdfbf7 0%, #f4ede1 100%);
+      border: 1px solid #e3d9c8;
+      border-radius: var(--radius-md);
+      padding: 34px 24px;
+      text-align: center;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-paper);
+    }
+
+    .contact-title {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--accent-ochre);
+      margin-bottom: 6px;
+    }
+
+    .contact-email {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ink-dark);
+      margin-bottom: 18px;
+      display: inline-block;
+      text-decoration: none;
+      font-family: 'Noto Sans KR', sans-serif;
+      transition: color 0.2s ease;
+    }
+
+    .contact-email:hover {
+      color: var(--accent-seal);
+    }
+
+    .footer-bottom {
+      text-align: center;
+      font-size: 13px;
+      color: var(--ink-light);
+      font-family: 'Noto Serif KR', serif;
+      padding-top: 16px;
+    }
+
+    /* --------------------------------------------------
+       전통 낙관 날인(Stamp) 토스트 알림
+    -------------------------------------------------- */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px) scale(0.9);
+      background: var(--card-bg);
+      border: 1.5px solid var(--accent-seal);
+      color: var(--ink-dark);
+      padding: 13px 26px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(184, 67, 50, 0.2);
+      transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Noto Serif KR', serif;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    .toast-seal-icon {
+      width: 22px;
+      height: 22px;
+      background: var(--accent-seal);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* --------------------------------------------------
+       모바일 화면 최적화
+    -------------------------------------------------- */
+    @media (max-width: 640px) {
+      .container {
+        padding: 20px 14px 60px;
+      }
+
+      .header {
+        padding: 38px 18px 28px;
+        border-radius: var(--radius-md);
+      }
+
+      .header-title {
+        font-size: 25px;
+      }
+
+      .header-subtitle {
+        font-size: 15px;
+      }
+
+      .profile-img-frame {
+        width: 124px;
+        height: 124px;
+      }
+
+      .section-card {
+        padding: 24px 18px;
+        border-radius: var(--radius-sm);
+        border-left-width: 3px;
+      }
+
+      .grid-two {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .exp-header {
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .exp-role-badge {
+        margin-left: 0;
+        margin-top: 4px;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .bookmark-ribbon {
+        right: 20px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+      .container {
+        max-width: 100%;
+        padding: 0;
+      }
+      #reading-progress, .bookmark-ribbon, .header-actions, .toast, .calligraphy-backdrop, #body-ink-canvas {
+        display: none !important;
+      }
+      .section-card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 화면 전체 수묵화 붓질 효과 캔버스 -->
+  <canvas id="body-ink-canvas" aria-hidden="true"></canvas>
+
+  <!-- 상단 스크롤 묵선 게이지 -->
+  <div id="reading-progress" aria-hidden="true"></div>
+
+  <div class="container">
+
+    <!-- 상단 프로필 헤더 (서예 한자 효과 배경) -->
+    <header class="header" id="header-area">
+      
+      <!-- 서예 한자(韓國學) 배경 워터마크 -->
+      <div class="calligraphy-backdrop">
+        <div class="calligraphy-chars" aria-hidden="true">
+          <span class="c-char char-han">韓</span>
+          <span class="c-char char-guk">國</span>
+          <span class="c-char char-hak">學</span>
+        </div>
+      </div>
+
+      <!-- 서재 책갈피 리본 -->
+      <div class="bookmark-ribbon" title="한국학 서재 책갈피" onclick="triggerBookmarkQuote()"></div>
+
+      <!-- 헤더 콘텐츠 -->
+      <div class="header-content">
+        <!-- 1. 영문 직무 명칭 뱃지 (Korean Studies Librarian) -->
+        <div>
+          <span class="header-badge">Korean Studies Librarian</span>
+        </div>
+
+        <!-- 2. 메인 타이틀 -->
+        <h1 class="header-title">한국학 주제전문사서 노윤진</h1>
+
+        <!-- 3. 중앙으로 위치를 낮춘 손그림 프로필 이미지 액자 ('國' 한자 위치) -->
+        <div class="profile-frame-wrap">
+          <div class="profile-img-frame" onclick="showProfileNotice()">
+            <img src="profile_hand_drawn.jpg" alt="한국학 주제전문사서 노윤진 손그림 프로필" class="profile-img">
+          </div>
+        </div>
+
+        <!-- 4. 서브타이틀 -->
+        <p class="header-subtitle">정사서 2급 | 사회학 · 문헌정보학 전공</p>
+
+        <!-- 5. 액션 버튼 -->
+        <div class="header-actions">
+          <a href="mailto:younjinnim@naver.com" class="btn btn-seal">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            이메일 보내기
+          </a>
+          <button type="button" class="btn btn-ochre" onclick="copyEmail()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            이메일 복사
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 1. 주요 경력 사항 -->
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-seal-icon">經</div>
+        <h2 class="section-title">경력 사항</h2>
+      </div>
+
+      <div class="experience-box">
+        <div class="exp-header">
+          <div>
+            <span class="exp-org">재외동포협력센터 / 재외동포자료실</span>
+            <span class="exp-role-badge">사서</span>
+          </div>
+          <span class="exp-period">2026.04.20 ~ 2026.08.31</span>
+        </div>
+
+        <ul class="exp-tasks">
+          <li>재외동포 관련 도서 수집, 조직, 목록(서지 정보 구축)</li>
+          <li>이용자 자료 검색 및 열람 지원</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 2. 학력 및 자격 -->
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-seal-icon">學</div>
+        <h2 class="section-title">학력 및 자격</h2>
+      </div>
+
+      <div class="grid-two">
+        <div class="info-box">
+          <div class="info-box-label">국가 공인 자격</div>
+          <div class="info-box-value">정사서자격증 2급</div>
+          <div class="info-box-desc">2025.08 취득</div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-label">학사 학위</div>
+          <div class="info-box-value">문헌정보학 · 사회학 전공</div>
+          <div class="info-box-desc">복수 전공 학사</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 전문 역량 및 도서관 시스템 -->
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-seal-icon">術</div>
+        <h2 class="section-title">전문 역량 및 시스템</h2>
+      </div>
+
+      <!-- 서지 및 분류 체계 -->
+      <div class="skills-group">
+        <div class="skills-group-title">
+          <span>서지 및 분류 체계</span>
+        </div>
+        <div class="skills-tags">
+          <span class="tag tag-highlight" onclick="showSkillTip('KORMARC', '한국문헌자동화목록형식으로 표준화된 서지 정보를 체계적으로 작성합니다.')">KORMARC</span>
+          <span class="tag" onclick="showSkillTip('KDC', '한국십진분류법을 기반으로 도서를 정확한 주제별로 분류·배가합니다.')">KDC (한국십진분류법)</span>
+          <span class="tag" onclick="showSkillTip('DDC', '듀이십진분류법을 통해 국제 표준 분류 체계에 맞춰 자료를 정리합니다.')">DDC (듀이십진분류법)</span>
+        </div>
+      </div>
+
+      <!-- 도서관 전산 시스템 -->
+      <div class="skills-group">
+        <div class="skills-group-title">
+          <span>도서관 전산 시스템</span>
+        </div>
+        <div class="skills-tags">
+          <span class="tag tag-highlight" onclick="showSkillTip('KLAS', '한국도서관자동화시스템을 활용해 수서·정리·대출 등 종합 자료관리를 수행합니다.')">KLAS</span>
+          <span class="tag tag-highlight" onclick="showSkillTip('라이브텍', '라이브텍 자료관리 전산 솔루션을 능숙하게 운용합니다.')">라이브텍</span>
+        </div>
+      </div>
+
+      <!-- 전문 실무 역량 -->
+      <div class="skills-group">
+        <div class="skills-group-title">
+          <span>핵심 실무 역량</span>
+        </div>
+        <div class="skills-tags">
+          <span class="tag" onclick="showSkillTip('자료조사능력', '신뢰도 높은 학술 정보와 연구 문헌을 정밀하게 탐색하고 정리합니다.')">자료조사능력</span>
+          <span class="tag" onclick="showSkillTip('외국어', '국내외 재외동포 자료와 글로벌 학술 문헌 탐색 및 정리를 지원합니다.')">외국어</span>
+          <span class="tag">서지 정보 구축</span>
+          <span class="tag">이용자 정보봉사</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 연락처 및 서재 푸터 -->
+    <section class="footer-contact">
+      <p class="contact-title">CONTACT</p>
+      <a href="mailto:younjinnim@naver.com" class="contact-email">younjinnim@naver.com</a>
+      <div>
+        <button type="button" class="btn btn-seal" onclick="copyEmail()">
+          이메일 주소 복사하기
+        </button>
+      </div>
+    </section>
+
+    <footer class="footer-bottom">
+      <p>© 노윤진. 한국학 주제전문사서 포트폴리오.</p>
+    </footer>
+
+  </div>
+
+  <!-- 낙관 도장 스타일의 토스트 알림창 -->
+  <div id="toast" class="toast">
+    <div class="toast-seal-icon">印</div>
+    <span id="toast-text">이메일 주소가 정갈하게 복사되었습니다.</span>
+  </div>
+
+  <script>
+    // 1. 상단 묵선 읽기 진행도 인터랙션
+    window.addEventListener('scroll', () => {
+      const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      document.getElementById('reading-progress').style.width = scrolled + '%';
+    });
+
+    // 2. 이메일 복사 및 낙관 알림 인터랙션
+    function copyEmail() {
+      const email = 'younjinnim@naver.com';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(email).then(() => {
+          showToast('이메일 주소가 복사되었습니다: ' + email);
+        }).catch(() => {
+          fallbackCopy(email);
+        });
+      } else {
+        fallbackCopy(email);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('이메일 주소가 복사되었습니다: ' + text);
+      } catch (err) {
+        alert('이메일 주소: ' + text);
+      }
+      document.body.removeChild(textArea);
+    }
+
+    let toastTimer;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const textElem = document.getElementById('toast-text');
+      textElem.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2600);
+    }
+
+    // 3. 서재 책갈피 리본 클릭 인터랙션
+    function triggerBookmarkQuote() {
+      showToast('책과 기록을 소중히 잇는 사서 노윤진의 서재입니다.');
+    }
+
+    // 4. 프로필 사진 클릭 인터랙션
+    function showProfileNotice() {
+      showToast('손그림으로 정성껏 빚은 프로필입니다.');
+    }
+
+    // 5. 역량 태그 클릭 시 상세 툴팁 인터랙션
+    function showSkillTip(skillName, desc) {
+      showToast(`[${skillName}] ${desc}`);
+    }
+
+    // --------------------------------------------------
+    // 6. 전신(화면 전체) 수묵화 먹물 붓질 캔버스 시스템
+    // --------------------------------------------------
+    (function initFullPageCalligraphy() {
+      const canvas = document.getElementById('body-ink-canvas');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      let width, height;
+      let lastX = null, lastY = null;
+      let clearIdleTimer;
+
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      // 수묵화 먹물 입자 생성
+      function createInkParticle(x, y, scale = 1, isIntro = false) {
+        particles.push({
+          x: x + (Math.random() - 0.5) * (isIntro ? 12 : 8),
+          y: y + (Math.random() - 0.5) * (isIntro ? 12 : 8),
+          radius: (Math.random() * 12 + 6) * scale,
+          maxRadius: (Math.random() * 38 + 18) * scale,
+          growth: Math.random() * 0.7 + 0.35,
+          opacity: Math.random() * 0.14 + (isIntro ? 0.12 : 0.08),
+          decay: Math.random() * 0.0035 + 0.0028
+        });
+      }
+
+      // 연속된 마우스/터치 좌표 사이를 붓으로 잇듯 부드럽게 보간(Interpolation)
+      function handleMove(x, y, scale = 1) {
+        if (lastX !== null && lastY !== null) {
+          const dx = x - lastX;
+          const dy = y - lastY;
+          const dist = Math.hypot(dx, dy);
+          const steps = Math.min(Math.max(1, Math.floor(dist / 9)), 12);
+          for (let i = 1; i <= steps; i++) {
+            const ix = lastX + (dx * i) / steps;
+            const iy = lastY + (dy * i) / steps;
+            createInkParticle(ix, iy, scale);
+          }
+        } else {
+          createInkParticle(x, y, scale);
+        }
+        lastX = x;
+        lastY = y;
+
+        clearTimeout(clearIdleTimer);
+        clearIdleTimer = setTimeout(() => {
+          lastX = null;
+          lastY = null;
+        }, 120);
+      }
+
+      // 화면 전체 마우스 이동 감지
+      window.addEventListener('mousemove', (e) => {
+        handleMove(e.clientX, e.clientY, 1.0);
+      }, { passive: true });
+
+      // 스마트폰 터치 및 스크롤 시 먹물 붓질
+      window.addEventListener('touchmove', (e) => {
+        if (!e.touches[0]) return;
+        const touch = e.touches[0];
+        handleMove(touch.clientX, touch.clientY, 1.15);
+      }, { passive: true });
+
+      window.addEventListener('touchend', () => {
+        lastX = null;
+        lastY = null;
+      });
+
+      // 페이지 로드 시 상단 「韓國學」을 가상의 붓으로 한 획씩 써내려가는 인트로 필획
+      function autoIntroStrokes() {
+        const header = document.getElementById('header-area');
+        if (!header) return;
+
+        const rect = header.getBoundingClientRect();
+        const startY = rect.top + rect.height * 0.34;
+        const charRatios = [0.22, 0.50, 0.78];
+
+        charRatios.forEach((ratio, idx) => {
+          setTimeout(() => {
+            const cx = rect.left + rect.width * ratio;
+            const steps = 14;
+            for (let s = 0; s < steps; s++) {
+              setTimeout(() => {
+                const px = cx + Math.sin(s * 0.5) * 16;
+                const py = startY + (s * (rect.height * 0.36 / steps));
+                createInkParticle(px, py, 1.35, true);
+              }, s * 45);
+            }
+          }, idx * 900 + 400);
+        });
+      }
+      setTimeout(autoIntroStrokes, 250);
+
+      // 먹물 번짐 애니메이션 루프 (화선지에 맑은 먹물이 스며들듯 번짐)
+      function render() {
+        ctx.clearRect(0, 0, width, height);
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          if (p.radius < p.maxRadius) {
+            p.radius += p.growth;
+          }
+          p.opacity -= p.decay;
+
+          if (p.opacity <= 0) {
+            particles.splice(i, 1);
+            continue;
+          }
+
+          const grad = ctx.createRadialGradient(p.x, p.y, p.radius * 0.08, p.x, p.y, p.radius);
+          grad.addColorStop(0, `rgba(26, 30, 36, ${p.opacity})`);
+          grad.addColorStop(0.5, `rgba(42, 48, 58, ${p.opacity * 0.65})`);
+          grad.addColorStop(1, `rgba(42, 48, 58, 0)`);
+
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        requestAnimationFrame(render);
+      }
+      render();
+    })();
+  </script>
+</body>
+</html>
